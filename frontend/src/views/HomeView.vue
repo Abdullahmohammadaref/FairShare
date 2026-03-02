@@ -7,7 +7,7 @@ const router = useRouter()
 // Create a room and rout to it
 const createRoom = async () => {
   try {
-    const { data, error } = await supabase.from('rooms').insert({}).select()
+    const { data, error } = await supabase.from('Rooms').insert({}).select()
 
     if (error) {
       throw error

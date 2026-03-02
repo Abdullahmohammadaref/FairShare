@@ -11,21 +11,39 @@ defineProps({
     type: Number,
     required: true,
   },
+  members: {
+    type: Array,
+    required: true,
+  },
 })
 
 const itemName = ref('')
+const itemPrice = ref(null)
+
 
 // Adds an item in the database for the current member
-const addItem = async (memberId) => {
+const addItem = async (memberId, members) => {
   try {
-    const { error } = await supabase
-      .from('items')
-      .insert({ name: itemName.value, payer_id: memberId })
+    const { data, error: itemError } = await supabase
+      .from('Items')
+      .insert({ name: itemName.value, price: itemPrice.value, payer_id: memberId })
       .select()
 
-    if (error) {
-      throw error
+    if (itemError) {
+      throw itemError
     }
+    for (const member of members) {
+      const { error: consumptionError } = await supabase
+        .from('ItemConsumptions')
+        .insert({ item_id: data[0].id, member_id: member.id, proportion: 0 })
+        .select()
+
+      if (consumptionError) {
+        throw consumptionError
+      }
+
+    }
+
     itemName.value = ''
   } catch (error) {
     alert(error.message)
@@ -36,9 +54,10 @@ const addItem = async (memberId) => {
 <template>
   <div id="form-overlay" :class="{ isFormVisible: isFormVisible }">
     <div id="form-background" @click="$emit('closeForm')"></div>
-    <form id="form" @submit.prevent="addItem(memberId)">
+    <form id="form" @submit.prevent="addItem(memberId, members)">
       <h1>New item</h1>
       <input type="text" placeholder="name" v-model="itemName" required />
+      <input type="number" placeholder="price" v-model="itemPrice" min="0" step="0.01" required />
       <button type="submit">Submit</button>
     </form>
   </div>

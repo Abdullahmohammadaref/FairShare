@@ -10,21 +10,40 @@ defineProps({
     type: Boolean,
     required: true,
   },
+  membersItems: {
+    type: Array,
+    required: true,
+  },
 })
 
 const memberName = ref('')
 
 // Adds a member in the database for the current room
-const addMember = async () => {
+const addMember = async (membersItems) => {
   try {
-    const { error } = await supabase
-      .from('members')
+    const { data, error: memberError } = await supabase
+      .from('Members')
       .insert({ name: memberName.value, room_id: route.params.roomId })
       .select()
 
-    if (error) {
-      throw error
+    if (memberError) {
+      throw memberError
     }
+    if (membersItems) {
+      for (const member of membersItems) {
+        for (const memberItem of member.memberItems) {
+          const { error: consumptionError } = await supabase
+            .from('ItemConsumptions')
+            .insert({ item_id: memberItem.id, member_id: data[0].id, proportion: 0 })
+            .select()
+
+          if (consumptionError) {
+            throw consumptionError
+          }
+        }
+      }
+    }
+
     memberName.value = ''
   } catch (error) {
     alert(error.message)
@@ -35,7 +54,7 @@ const addMember = async () => {
 <template>
   <div id="form-overlay" :class="{ isFormVisible: isFormVisible }">
     <div id="form-background" @click="$emit('closeForm')"></div>
-    <form id="form" @submit.prevent="addMember">
+    <form id="form" @submit.prevent="addMember(membersItems)">
       <h1>New member</h1>
       <input type="text" placeholder="name" v-model="memberName" required />
       <button type="submit">Submit</button>
