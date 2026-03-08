@@ -182,18 +182,67 @@ onUnmounted(() => {
 
 // Always update this variable to store members, items, and items consumptions
 const membersItems = computed(() => {
-  return members.value.map((member) => {
+  const updatedMembers = members.value.map((member) => {
+    let totalMoneySpent = 0
+    let totalValueConsumed = 0
+    let moneyOwnedOrNeeded = 0
+
     const filteredMemberItems = items.value.filter((item) => item.payer_id === member.id)
 
     const memberItems = filteredMemberItems.map((memberItem) => {
-      const memberItemConsumptions = itemConsumptions.value.filter(
+      const itemConsumptionProportionsSum = ref(0)
+
+      const filteredMemberItemConsumptions = itemConsumptions.value.filter(
         (itemConsumption) => itemConsumption.item_id === memberItem.id,
       )
-      return { ...memberItem, memberItemConsumptions }
+
+      filteredMemberItemConsumptions.forEach((itemConsumption) => {
+        itemConsumptionProportionsSum.value += itemConsumption.proportion
+      })
+
+      const memberItemConsumptions = filteredMemberItemConsumptions.map((memberItemConsumption) => {
+        const valueConsumed = (
+          (memberItemConsumption.proportion / itemConsumptionProportionsSum.value) *
+          memberItem.price
+        ).toFixed(2)
+        return { ...memberItemConsumption, valueConsumed }
+      })
+
+      memberItemConsumptions.forEach((itemConsumption) => {
+        itemConsumptionProportionsSum.value += itemConsumption.proportion
+      })
+
+      return { ...memberItem, memberItemConsumptions, itemConsumptionProportionsSum }
     })
 
-    return { ...member, memberItems }
+    memberItems.forEach((memberItem) => {
+      totalMoneySpent += memberItem.price
+    })
+
+    return { ...member, memberItems, totalMoneySpent, totalValueConsumed, moneyOwnedOrNeeded }
   })
+
+  const consumptions = []
+  for (const member of updatedMembers) {
+    for (const memberItem of member.memberItems) {
+      consumptions.push(memberItem.memberItemConsumptions)
+    }
+  }
+
+  for (const member of updatedMembers) {
+    for (const itemConsumptions of consumptions) {
+      const memberConsumptions = itemConsumptions.filter(
+        (consumption) => consumption.member_id === member.id,
+      )
+
+      for (const consumption of memberConsumptions) {
+        member.totalValueConsumed += consumption.valueConsumed
+      }
+    }
+    member.moneyOwnedOrNeeded = member.totalMoneySpent - member.totalValueConsumed
+  }
+
+  return updatedMembers
 })
 
 const updateConsumptionProportion = async (itemConsumption) => {
@@ -209,14 +258,6 @@ const updateConsumptionProportion = async (itemConsumption) => {
   } catch (error) {
     alert(error.message)
   }
-}
-
-const itemConsumptionProportionsSum = (memberItemConsumptions) => {
-  let total = 0
-  for (const itemConsumption of memberItemConsumptions) {
-    total += itemConsumption.proportion
-  }
-  return total
 }
 </script>
 
@@ -236,7 +277,7 @@ const itemConsumptionProportionsSum = (memberItemConsumptions) => {
     <button @click="toggleAddMemberForm">New member</button>
     <ul>
       <li v-for="member in membersItems" :key="member.id">
-        {{ member.name }}
+        {{ member.name }} : {{ member.moneyOwnedOrNeeded }}
         <button @click="toggleAddItemForm(member.id)">New Item</button>
         <ul>
           <li v-for="memberItem in member.memberItems" :key="memberItem.id">
@@ -264,8 +305,8 @@ const itemConsumptionProportionsSum = (memberItemConsumptions) => {
                     min="0"
                     required
                   />
-                  / {{ itemConsumptionProportionsSum(memberItem.memberItemConsumptions) }} :
-                  {{ ((itemConsumption.proportion / itemConsumptionProportionsSum(memberItem.memberItemConsumptions)) * memberItem.price).toFixed(2) }}
+                  / {{ memberItem.itemConsumptionProportionsSum }} :
+                  {{ itemConsumption.valueConsumed }}
                 </li>
               </ul>
             </form>
