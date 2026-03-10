@@ -319,6 +319,72 @@ const updateConsumptionProportion = async (itemConsumption) => {
     alert(error.message)
   }
 }
+const updateMemberName = async (member) => {
+  try {
+    const { error } = await supabase
+      .from('Members')
+      .update({ name: member.name })
+      .eq('id', member.id)
+      .select()
+    if (error) {
+      throw error
+    }
+  } catch (error) {
+    alert(error.message)
+  }
+}
+
+const deleteMember = async (member) => {
+  try {
+    const { error } = await supabase.from('Members').delete().eq('id', member.id)
+    if (error) {
+      throw error
+    }
+  } catch (error) {
+    alert(error.message)
+  }
+}
+
+const updateMemberItemName = async (memberItem) => {
+  try {
+    const { error } = await supabase
+      .from('Items')
+      .update({ name: memberItem.name })
+      .eq('id', memberItem.id)
+      .select()
+    if (error) {
+      throw error
+    }
+  } catch (error) {
+    alert(error.message)
+  }
+}
+
+const updateMemberItemPrice = async (memberItem) => {
+  try {
+    const { error } = await supabase
+      .from('Items')
+      .update({ price: memberItem.price })
+      .eq('id', memberItem.id)
+      .select()
+    if (error) {
+      throw error
+    }
+  } catch (error) {
+    alert(error.message)
+  }
+}
+
+const deleteMemberItem = async (memberItem) => {
+  try {
+    const { error } = await supabase.from('Items').delete().eq('id', memberItem.id)
+    if (error) {
+      throw error
+    }
+  } catch (error) {
+    alert(error.message)
+  }
+}
 </script>
 
 <template>
@@ -334,47 +400,68 @@ const updateConsumptionProportion = async (itemConsumption) => {
       :memberId="addItemFormMember"
       :members="members"
     />
-    <button @click="toggleAddMemberForm">New member</button>
-    <ul>
-      <li v-for="member in membersItems.updatedMembers" :key="member.id">
-        {{ member.name }} : {{ member.moneyOwnedOrNeeded }}
-        <button @click="toggleAddItemForm(member.id)">New Item</button>
-        <ul>
-          <li v-for="memberItem in member.memberItems" :key="memberItem.id">
-            {{ memberItem.name }}: {{ memberItem.price }}
-            <form @submit.prevent>
-              <ul>
-                <li
-                  v-for="itemConsumption in memberItem.memberItemConsumptions"
-                  :key="itemConsumption.id"
-                >
-                  <label :for="itemConsumption.member_id">
-                    {{
-                      members.find(
-                        (memberInMembers) => memberInMembers.id === itemConsumption.member_id,
-                      )?.name
-                    }}
-                  </label>
-                  <input
-                    :id="itemConsumption.member_id"
-                    @change="updateConsumptionProportion(itemConsumption)"
-                    type="number"
-                    v-model="itemConsumption.proportion"
-                    :value="itemConsumption.proportion"
-                    step="0.01"
-                    min="0"
-                    required
-                  />
-                  / {{ memberItem.itemConsumptionProportionsSum }} :
-                  {{ itemConsumption.valueConsumed }}
-                </li>
-              </ul>
-            </form>
-          </li>
-        </ul>
-        <hr />
-      </li>
-    </ul>
+    <button type="button" @click="toggleAddMemberForm">New member</button>
+    <form @submit.prevent>
+      <ul>
+        <li v-for="member in membersItems.updatedMembers" :key="member.id">
+          <button type="button" @click="deleteMember(member)">x</button>
+          <input @change="updateMemberName(member)" type="text" v-model="member.name" required /> :
+          {{ member.moneyOwnedOrNeeded }}
+          <button type="button" @click="toggleAddItemForm(member.id)">New Item</button>
+          <form @submit.prevent>
+            <ul>
+              <li v-for="memberItem in member.memberItems" :key="memberItem.id">
+                <button type="button" @click="deleteMemberItem(memberItem)">x</button>
+                <input
+                  @change="updateMemberItemName(memberItem)"
+                  type="text"
+                  v-model="memberItem.name"
+                  required
+                />
+                :
+                <input
+                  @change="updateMemberItemPrice(memberItem)"
+                  type="number"
+                  v-model="memberItem.price"
+                  step="0.01"
+                  min="0"
+                  required
+                />
+                <form @submit.prevent>
+                  <ul>
+                    <li
+                      v-for="itemConsumption in memberItem.memberItemConsumptions"
+                      :key="itemConsumption.id"
+                    >
+                      <label :for="itemConsumption.member_id">
+                        {{
+                          members.find(
+                            (memberInMembers) => memberInMembers.id === itemConsumption.member_id,
+                          )?.name
+                        }}
+                      </label>
+                      <input
+                        :id="itemConsumption.member_id"
+                        @change="updateConsumptionProportion(itemConsumption)"
+                        type="number"
+                        v-model="itemConsumption.proportion"
+                        :value="itemConsumption.proportion"
+                        step="0.01"
+                        min="0"
+                        required
+                      />
+                      / {{ memberItem.itemConsumptionProportionsSum }} :
+                      {{ itemConsumption.valueConsumed }}
+                    </li>
+                  </ul>
+                </form>
+              </li>
+            </ul>
+          </form>
+          <hr />
+        </li>
+      </ul>
+    </form>
     <hr />
     <ul>
       <li
