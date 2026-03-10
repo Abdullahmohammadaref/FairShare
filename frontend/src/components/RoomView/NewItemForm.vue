@@ -45,6 +45,7 @@ const addItem = async (memberId, members) => {
     }
 
     itemName.value = ''
+    itemPrice.value = null
   } catch (error) {
     alert(error.message)
   }

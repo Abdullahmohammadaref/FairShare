@@ -201,15 +201,16 @@ const membersItems = computed(() => {
       })
 
       const memberItemConsumptions = filteredMemberItemConsumptions.map((memberItemConsumption) => {
-        const valueConsumed = (
-          (memberItemConsumption.proportion / itemConsumptionProportionsSum.value) *
-          memberItem.price
-        ).toFixed(2)
+        let valueConsumed = 0
+        if (itemConsumptionProportionsSum.value > 0) {
+          valueConsumed = parseFloat(
+            (
+              (memberItemConsumption.proportion / itemConsumptionProportionsSum.value) *
+              memberItem.price
+            ).toFixed(2),
+          )
+        }
         return { ...memberItemConsumption, valueConsumed }
-      })
-
-      memberItemConsumptions.forEach((itemConsumption) => {
-        itemConsumptionProportionsSum.value += itemConsumption.proportion
       })
 
       return { ...memberItem, memberItemConsumptions, itemConsumptionProportionsSum }
@@ -239,10 +240,69 @@ const membersItems = computed(() => {
         member.totalValueConsumed += consumption.valueConsumed
       }
     }
-    member.moneyOwnedOrNeeded = member.totalMoneySpent - member.totalValueConsumed
+    member.moneyOwnedOrNeeded = parseFloat(
+      (member.totalMoneySpent - member.totalValueConsumed).toFixed(2),
+    )
   }
 
-  return updatedMembers
+  // Transfer plan algorithm
+  const transferPlan = []
+  // 1- Create and populate arrays for both payers and payees
+  const payers = []
+  const recivers = []
+  for (const member of updatedMembers) {
+    if (member.moneyOwnedOrNeeded > 0) {
+      recivers.push({ ...member })
+    } else {
+      payers.push({ ...member })
+    }
+  }
+  // 2- Sort members inside the arrays in ascending order by the absolute value of their totalValueConsumed.
+  payers.sort((a, b) => -(a.moneyOwnedOrNeeded - b.moneyOwnedOrNeeded))
+  recivers.sort((a, b) => a.moneyOwnedOrNeeded - b.moneyOwnedOrNeeded)
+
+  // 3- Keep making the highest in debt send to the highest in credit
+  while (true) {
+    if (payers.length === 0 || recivers.length === 0) {
+      break
+    } else if (
+      -payers[payers.length - 1].moneyOwnedOrNeeded >
+      recivers[recivers.length - 1].moneyOwnedOrNeeded
+    ) {
+      transferPlan.push({
+        payer: payers[payers.length - 1],
+        reciver: recivers[recivers.length - 1],
+        amount: parseFloat(recivers[recivers.length - 1].moneyOwnedOrNeeded.toFixed(2)),
+      })
+      payers[payers.length - 1].moneyOwnedOrNeeded +=
+        recivers[recivers.length - 1].moneyOwnedOrNeeded
+      payers.sort((a, b) => -(a.moneyOwnedOrNeeded - b.moneyOwnedOrNeeded))
+      recivers.pop()
+    } else if (
+      -payers[payers.length - 1].moneyOwnedOrNeeded <
+      recivers[recivers.length - 1].moneyOwnedOrNeeded
+    ) {
+      transferPlan.push({
+        payer: payers[payers.length - 1],
+        reciver: recivers[recivers.length - 1],
+        amount: parseFloat(-payers[payers.length - 1].moneyOwnedOrNeeded),
+      })
+      recivers[recivers.length - 1].moneyOwnedOrNeeded -=
+        -payers[payers.length - 1].moneyOwnedOrNeeded
+      recivers.sort((a, b) => a.moneyOwnedOrNeeded - b.moneyOwnedOrNeeded)
+      payers.pop()
+    } else {
+      transferPlan.push({
+        payer: payers[payers.length - 1],
+        reciver: recivers[recivers.length - 1],
+        amount: parseFloat(recivers[recivers.length - 1].moneyOwnedOrNeeded.toFixed(2)),
+      })
+      payers.pop()
+      recivers.pop()
+    }
+  }
+
+  return { updatedMembers, transferPlan }
 })
 
 const updateConsumptionProportion = async (itemConsumption) => {
@@ -266,7 +326,7 @@ const updateConsumptionProportion = async (itemConsumption) => {
     <NewMemberForm
       @closeForm="toggleAddMemberForm"
       :isFormVisible="isAddMemberFormVisible"
-      :membersItems="membersItems"
+      :membersItems="membersItems.updatedMembers"
     />
     <NewItemForm
       @closeForm="toggleAddItemForm"
@@ -276,7 +336,7 @@ const updateConsumptionProportion = async (itemConsumption) => {
     />
     <button @click="toggleAddMemberForm">New member</button>
     <ul>
-      <li v-for="member in membersItems" :key="member.id">
+      <li v-for="member in membersItems.updatedMembers" :key="member.id">
         {{ member.name }} : {{ member.moneyOwnedOrNeeded }}
         <button @click="toggleAddItemForm(member.id)">New Item</button>
         <ul>
@@ -312,6 +372,16 @@ const updateConsumptionProportion = async (itemConsumption) => {
             </form>
           </li>
         </ul>
+        <hr />
+      </li>
+    </ul>
+    <hr />
+    <ul>
+      <li
+        v-for="transfer in membersItems.transferPlan"
+        :key="`${transfer.payer.id} - ${transfer.reciver.id}`"
+      >
+        {{ transfer.payer.name }} --{{ transfer.amount }}--> {{ transfer.reciver.name }}
       </li>
     </ul>
   </main>
