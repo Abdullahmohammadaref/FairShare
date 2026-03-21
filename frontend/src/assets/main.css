@@ -2,12 +2,15 @@
   height: 100%;
 }
 
-html, body {
+html,
+body {
   height: 100%;
+  background: #e2e8e4;
+  color: black;
+  font-family: 'poppins', sans-serif;
 }
 
 * {
   margin: 0;
   padding: 0;
 }
-

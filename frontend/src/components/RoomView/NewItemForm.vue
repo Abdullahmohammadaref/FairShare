@@ -20,7 +20,6 @@ defineProps({
 const itemName = ref('')
 const itemPrice = ref(null)
 
-
 // Adds an item in the database for the current member
 const addItem = async (memberId, members) => {
   try {
@@ -41,7 +40,6 @@ const addItem = async (memberId, members) => {
       if (consumptionError) {
         throw consumptionError
       }
-
     }
 
     itemName.value = ''
@@ -57,8 +55,8 @@ const addItem = async (memberId, members) => {
     <div id="form-background" @click="$emit('closeForm')"></div>
     <form id="form" @submit.prevent="addItem(memberId, members)">
       <h1>New item</h1>
-      <input type="text" placeholder="name" v-model="itemName" required />
-      <input type="number" placeholder="price" v-model="itemPrice" min="0" step="0.01" required />
+      <input type="text" placeholder="Name" v-model="itemName" required />
+      <input type="number" placeholder="Price" v-model="itemPrice" min="0" step="0.01" required />
       <button type="submit">Submit</button>
     </form>
   </div>
@@ -109,12 +107,33 @@ const addItem = async (memberId, members) => {
   gap: 1.1rem;
   padding: 2.5rem;
   border-radius: 0.5rem;
-  background-color: white;
+  background-color: #f0f4f2;
   max-width: 40%;
   box-shadow: 0 2px 10px hsla(0, 0%, 0%, 0.4);
   opacity: 0;
   transition:
     opacity 0.18s ease-in-out,
     visibility 0.18s;
+}
+
+input {
+  background-color: #e2e8e4;
+  border-radius: 0.3rem;
+  border: none;
+  padding: 0.5rem;
+}
+button {
+  background-color: #7b9669;
+  border-radius: 1rem;
+  padding: 0.3rem;
+  border: none;
+  transition: transform 0.1s ease-in-out;
+  font-weight: bold;
+  font-size: 0.8rem;
+  width: 50%;
+  align-self: center;
+}
+button:hover {
+  transform: scale(1.1);
 }
 </style>

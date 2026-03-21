@@ -56,7 +56,7 @@ const addMember = async (membersItems) => {
     <div id="form-background" @click="$emit('closeForm')"></div>
     <form id="form" @submit.prevent="addMember(membersItems)">
       <h1>New member</h1>
-      <input type="text" placeholder="name" v-model="memberName" required />
+      <input type="text" placeholder="Name" v-model="memberName" required />
       <button type="submit">Submit</button>
     </form>
   </div>
@@ -107,12 +107,32 @@ const addMember = async (membersItems) => {
   gap: 1.1rem;
   padding: 2.5rem;
   border-radius: 0.5rem;
-  background-color: white;
+  background-color: #f0f4f2;
   max-width: 40%;
   box-shadow: 0 2px 10px hsla(0, 0%, 0%, 0.4);
   opacity: 0;
   transition:
     opacity 0.18s ease-in-out,
     visibility 0.18s;
+}
+input {
+  background-color: #e2e8e4;
+  border-radius: 0.3rem;
+  border: none;
+  padding: 0.5rem;
+}
+button {
+  background-color: #7b9669;
+  border-radius: 1rem;
+  padding: 0.3rem;
+  border: none;
+  transition: transform 0.1s ease-in-out;
+  font-weight: bold;
+  font-size: 0.8rem;
+  width: 50%;
+  align-self: center;
+}
+button:hover {
+  transform: scale(1.1);
 }
 </style>

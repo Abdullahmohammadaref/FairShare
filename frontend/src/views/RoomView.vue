@@ -388,96 +388,313 @@ const deleteMemberItem = async (memberItem) => {
 </script>
 
 <template>
+  <NewMemberForm
+    @closeForm="toggleAddMemberForm"
+    :isFormVisible="isAddMemberFormVisible"
+    :membersItems="membersItems.updatedMembers"
+  />
+  <NewItemForm
+    @closeForm="toggleAddItemForm"
+    :isFormVisible="isAddItemFormVisible"
+    :memberId="addItemFormMember"
+    :members="members"
+  />
   <main>
-    <NewMemberForm
-      @closeForm="toggleAddMemberForm"
-      :isFormVisible="isAddMemberFormVisible"
-      :membersItems="membersItems.updatedMembers"
-    />
-    <NewItemForm
-      @closeForm="toggleAddItemForm"
-      :isFormVisible="isAddItemFormVisible"
-      :memberId="addItemFormMember"
-      :members="members"
-    />
-    <button type="button" @click="toggleAddMemberForm">New member</button>
-    <form @submit.prevent>
-      <ul>
-        <li v-for="member in membersItems.updatedMembers" :key="member.id">
-          <button type="button" @click="deleteMember(member)">x</button>
-          <input @change="updateMemberName(member)" type="text" v-model="member.name" required /> :
-          {{ member.moneyOwnedOrNeeded }}
-          <button type="button" @click="toggleAddItemForm(member.id)">New Item</button>
-          <form @submit.prevent>
-            <ul>
-              <li v-for="memberItem in member.memberItems" :key="memberItem.id">
-                <button type="button" @click="deleteMemberItem(memberItem)">x</button>
+    <header>
+      <h1>FairShare</h1>
+      <button type="button" @click="toggleAddMemberForm">
+        <img src="../assets/images/add.svg" alt="add" />
+        <span>Add Member</span>
+      </button>
+    </header>
+
+    <div id="body">
+      <section id="membersSection">
+        <h2>Members and expenses</h2>
+
+        <form id="membersForm" @submit.prevent>
+          <ul>
+            <li id="member" v-for="member in membersItems.updatedMembers" :key="member.id">
+              <div class="row">
                 <input
-                  @change="updateMemberItemName(memberItem)"
+                  id="memberNameField"
+                  class="nameField"
+                  @change="updateMemberName(member)"
                   type="text"
-                  v-model="memberItem.name"
+                  v-model="member.name"
                   required
                 />
-                :
-                <input
-                  @change="updateMemberItemPrice(memberItem)"
-                  type="number"
-                  v-model="memberItem.price"
-                  step="0.01"
-                  min="0"
-                  required
-                />
-                <form @submit.prevent>
-                  <ul>
-                    <li
-                      v-for="itemConsumption in memberItem.memberItemConsumptions"
-                      :key="itemConsumption.id"
-                    >
-                      <label :for="itemConsumption.member_id">
-                        {{
-                          members.find(
-                            (memberInMembers) => memberInMembers.id === itemConsumption.member_id,
-                          )?.name
-                        }}
-                      </label>
+                <p id="moneyOwnedOrNeededSmallerThanZero" v-if="member.moneyOwnedOrNeeded < 0">
+                  {{ member.moneyOwnedOrNeeded }}
+                </p>
+                <p id="moneyOwnedOrNeededGraterThanZero" v-if="member.moneyOwnedOrNeeded > 0">
+                  {{ member.moneyOwnedOrNeeded }}
+                </p>
+                <p id="moneyOwnedOrNeededEqualToZero" v-if="member.moneyOwnedOrNeeded === 0">
+                  {{ member.moneyOwnedOrNeeded }}
+                </p>
+                <button type="button" @click="toggleAddItemForm(member.id)">Add Item</button>
+                <button type="button" @click="deleteMember(member)">
+                  <img src="../assets/images/trash.svg" alt="delete" />
+                </button>
+              </div>
+
+              <form id="memberItemsForm" @submit.prevent>
+                <ul>
+                  <li v-for="memberItem in member.memberItems" :key="memberItem.id">
+                    <div class="row">
                       <input
-                        :id="itemConsumption.member_id"
-                        @change="updateConsumptionProportion(itemConsumption)"
+                        id="memberItemNameField"
+                        class="nameField"
+                        @change="updateMemberItemName(memberItem)"
+                        type="text"
+                        v-model="memberItem.name"
+                        required
+                      />
+                      <input
+                        id="memberItemPriceField"
+                        class="priceField"
+                        @change="updateMemberItemPrice(memberItem)"
                         type="number"
-                        v-model="itemConsumption.proportion"
-                        :value="itemConsumption.proportion"
+                        v-model="memberItem.price"
                         step="0.01"
                         min="0"
                         required
                       />
-                      / {{ memberItem.itemConsumptionProportionsSum }} :
-                      {{ itemConsumption.valueConsumed }}
-                    </li>
-                  </ul>
-                </form>
-              </li>
-            </ul>
-          </form>
-          <hr />
-        </li>
-      </ul>
-    </form>
-    <hr />
-    <ul>
-      <li
-        v-for="transfer in membersItems.transferPlan"
-        :key="`${transfer.payer.id} - ${transfer.reciver.id}`"
-      >
-        {{ transfer.payer.name }} --{{ transfer.amount }}--> {{ transfer.reciver.name }}
-      </li>
-    </ul>
+                      <button type="button" @click="deleteMemberItem(memberItem)">
+                        <img src="../assets/images/trash.svg" alt="delete" />
+                      </button>
+                    </div>
+
+                    <form id="memberItemConsumptionsForm" @submit.prevent>
+                      <ul>
+                        <li
+                          v-for="itemConsumption in memberItem.memberItemConsumptions"
+                          :key="itemConsumption.id"
+                        >
+                          <div class="row">
+                            <label :for="itemConsumption.member_id"
+                              >{{
+                                members.find(
+                                  (memberInMembers) =>
+                                    memberInMembers.id === itemConsumption.member_id,
+                                )?.name
+                              }}:</label
+                            >
+                            <input
+                              class="priceField"
+                              :id="itemConsumption.member_id"
+                              @change="updateConsumptionProportion(itemConsumption)"
+                              type="number"
+                              v-model="itemConsumption.proportion"
+                              :value="itemConsumption.proportion"
+                              step="0.01"
+                              min="0"
+                              required
+                            />
+                            <p id="proportionSum">
+                              / {{ memberItem.itemConsumptionProportionsSum }}
+                            </p>
+                            <p id="valueConsumed">{{ itemConsumption.valueConsumed }}</p>
+                          </div>
+                        </li>
+                      </ul>
+                    </form>
+                  </li>
+                </ul>
+              </form>
+            </li>
+          </ul>
+        </form>
+      </section>
+
+      <section id="planSection">
+        <h2>Payment plan</h2>
+        <ul>
+          <li
+            id="planItem"
+            v-for="transfer in membersItems.transferPlan"
+            :key="`${transfer.payer.id} - ${transfer.reciver.id}`"
+          >
+            <p id="payer">{{ transfer.payer.name }}</p>
+            send
+            <p id="amount">{{ transfer.amount }}</p>
+            to
+            <p id="reciver">{{ transfer.reciver.name }}</p>
+          </li>
+        </ul>
+      </section>
+    </div>
   </main>
 </template>
 
 <style scoped>
 main {
-  position: relative;
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+}
+
+header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  background-color: #f0f4f2;
+  border-radius: 0.7rem;
+  width: 100%;
+}
+
+#body {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 0 2rem;
+}
+
+#membersSection {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+#planSection {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+button {
+  background-color: #7b9669;
+  border-radius: 1rem;
+  border: none;
+  width: auto;
+  padding: 0.5rem 0.6rem;
+  font-weight: bold;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: transform 0.1s ease-in-out;
+}
+button:hover{
+  transform: scale(1.1);
+}
+
+input {
+  background-color: #e2e8e4;
+  border: hsla(0, 0%, 0%, 0.1) 1px solid;
+  border-radius: 0.3rem;
+  padding: 0.5rem;
+  height: 2rem;
+  box-sizing: border-box;
+}
+
+li {
+  display: flex;
+  flex-direction: column;
+
+  gap: 1rem;
+  margin: 1rem;
+  border: hsla(0, 0%, 0%, 0.1) 1px solid;
+
+  background-color: #f0f4f2;
+  border-radius: 0.7rem;
+}
+h2 {
+  margin: 1rem;
+}
+
+#planItem {
+  display: flex;
+  flex-direction: row;
+  padding: 1rem;
+}
+
+section {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  gap: 0.6rem;
+
+  padding: 0.5rem;
+  background-color: #e2e8e4;
+  border-radius: 0.7rem;
+}
+
+#member {
+  margin: 0;
+}
+
+#valueConsumed {
+  background-color: #7b9669;
+  border-radius: 0.7rem;
+  padding: 0.2rem 0.6rem 0.2rem 0.6rem;
+}
+#proportionSum {
+  color: hsla(0, 0%, 50%, 0.5);
+  background-color: #e2e8e4;
+}
+#moneyOwnedOrNeededSmallerThanZero {
+  background-color: #991b1b;
+  border-radius: 0.7rem;
+  padding: 0.3rem 0.7rem 0.3rem 0.7rem;
+}
+#moneyOwnedOrNeededGraterThanZero {
+  background-color: #7b9669;
+  border-radius: 0.7rem;
+  padding: 0.3rem 0.7rem 0.3rem 0.7rem;
+}
+#moneyOwnedOrNeededEqualToZero {
+  background-color: gray;
+  border-radius: 0.7rem;
+  padding: 0.3rem 0.7rem 0.3rem 0.7rem;
+}
+#payer {
+  color: #991b1b;
+  background-color: #f0f4f2;
+}
+#reciver {
+  color: green;
+  background-color: #f0f4f2;
+}
+#amount {
+  color: gray;
+  background-color: #f0f4f2;
+}
+
+@media screen and (min-width: 0px) and (max-width: 480px) {
+  #body {
+    flex-direction: column;
+  }
+  .nameField {
+    width: 8rem;
+  }
+  .priceField {
+    width: 7rem;
+  }
+}
+@media screen and (min-width: 481px) and (max-width: 768px) {
+  #body {
+    flex-direction: column;
+  }
+}
+@media screen and (min-width: 769px) and (max-width: 1280px) {
+}
+@media screen and (min-width: 1280px) {
 }
 </style>
