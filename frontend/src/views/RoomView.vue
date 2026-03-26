@@ -248,7 +248,6 @@ const membersItems = computed(() => {
 
   const transferPlan = generateTransferPlan(updatedMembers)
 
-
   return { updatedMembers, transferPlan }
 })
 
@@ -372,13 +371,13 @@ const deleteMemberItem = async (memberItem) => {
                   required
                 />
                 <p id="moneyOwnedOrNeededSmallerThanZero" v-if="member.moneyOwnedOrNeeded < 0">
-                  {{ member.moneyOwnedOrNeeded }}
+                  €{{ member.moneyOwnedOrNeeded }}
                 </p>
                 <p id="moneyOwnedOrNeededGraterThanZero" v-if="member.moneyOwnedOrNeeded > 0">
-                  {{ member.moneyOwnedOrNeeded }}
+                  €{{ member.moneyOwnedOrNeeded }}
                 </p>
                 <p id="moneyOwnedOrNeededEqualToZero" v-if="member.moneyOwnedOrNeeded === 0">
-                  {{ member.moneyOwnedOrNeeded }}
+                  €{{ member.moneyOwnedOrNeeded }}
                 </p>
                 <button type="button" @click="toggleAddItemForm(member.id)">Add Item</button>
                 <button type="button" @click="deleteMember(member)">
@@ -398,7 +397,7 @@ const deleteMemberItem = async (memberItem) => {
                         v-model="memberItem.name"
                         required
                       />
-                      <input
+                      €<input
                         id="memberItemPriceField"
                         class="priceField"
                         @change="updateMemberItemPrice(memberItem)"
@@ -442,7 +441,7 @@ const deleteMemberItem = async (memberItem) => {
                             <p id="proportionSum">
                               / {{ memberItem.itemConsumptionProportionsSum }}
                             </p>
-                            <p id="valueConsumed">{{ itemConsumption.valueConsumed }}</p>
+                            <p id="valueConsumed">€{{ itemConsumption.valueConsumed }}</p>
                           </div>
                         </li>
                       </ul>
@@ -465,7 +464,7 @@ const deleteMemberItem = async (memberItem) => {
           >
             <p id="payer">{{ transfer.payer.name }}</p>
             send
-            <p id="amount">{{ transfer.amount }}</p>
+            <p id="amount">€{{ transfer.amount }}</p>
             to
             <p id="reciver">{{ transfer.reciver.name }}</p>
           </li>
@@ -485,7 +484,6 @@ main {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-
 }
 
 header {
@@ -534,7 +532,7 @@ button {
   gap: 0.5rem;
   transition: transform 0.1s ease-in-out;
 }
-button:hover{
+button:hover {
   transform: scale(1.1);
 }
 
